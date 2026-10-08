@@ -1,6 +1,7 @@
 import gradio as gr
 
 from app.config import APP_TITLE, FORECAST_HORIZON_HOURS
+from app.evidence import get_conformal_evaluation
 from app.data import load_data, split_chronological, replay_prediction, replay_all
 from app.components.snapshot import format_snapshot
 from app.components.backtest import build_backtest_section, build_replay_table
@@ -73,6 +74,26 @@ future PM2.5 using fire detections, weather, and historical air quality.
         gr.Markdown("## Full held-out replay")
         replay_results = replay_all(df)
         build_replay_table(replay_results)
+
+        uncertainty = get_conformal_evaluation()
+
+        gr.Markdown(
+            f"""
+## Uncertainty evaluation — research only
+
+An 80% conformal prediction interval was calibrated on **{uncertainty["calibration_rows"]}**
+historical observations and evaluated on the **{uncertainty["test_rows"]}** held-out observations.
+
+- Target coverage: **{uncertainty["target_coverage"] * 100:.0f}%**
+- Observed test coverage: **{uncertainty["test_coverage"] * 100:.1f}%**
+- Average interval width: **{uncertainty["average_interval_width"]:.2f} µg/m³**
+- Conformal radius: **{uncertainty["radius"]:.2f} µg/m³**
+
+> **Interpretation:** coverage was above the target, but the intervals were too wide
+> to be considered decision-useful for the current October 2025 dataset.
+> SmokeClock therefore does **not** present this interval as operational confidence.
+"""
+        )
 
         gr.Markdown(
             f"""
