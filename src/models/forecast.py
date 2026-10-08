@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from lightgbm import LGBMRegressor
 
@@ -51,3 +52,36 @@ def train_forecast(
 def predict(model: LGBMRegressor, row: pd.DataFrame):
     """Generate an M3 PM2.5 prediction for one or more rows."""
     return model.predict(row[M3_FEATURES])
+
+
+def conformal_radius(
+    model: LGBMRegressor,
+    calibration: pd.DataFrame,
+    coverage: float = 0.80,
+) -> float:
+    """Estimate a symmetric conformal residual radius."""
+    if not 0 < coverage < 1:
+        raise ValueError("coverage must be between 0 and 1")
+
+    residuals = (
+        calibration["target_pm25"].to_numpy()
+        - predict(model, calibration)
+    )
+    absolute_residuals = pd.Series(residuals).abs()
+
+    n = len(absolute_residuals)
+    rank = int(np.ceil((n + 1) * coverage))
+    rank = min(rank, n)
+
+    return float(absolute_residuals.sort_values().iloc[rank - 1])
+
+
+def prediction_interval(
+    prediction: float,
+    radius: float,
+) -> tuple[float, float]:
+    """Return a symmetric conformal prediction interval."""
+    return (
+        max(0.0, prediction - radius),
+        prediction + radius,
+    )
