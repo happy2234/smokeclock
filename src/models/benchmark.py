@@ -6,6 +6,8 @@ import pandas as pd
 from lightgbm import LGBMRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
+from src.models.forecast import BASE_FEATURES, TRANSPORT_FEATURES, create_model
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
@@ -27,22 +29,6 @@ def evaluate(name, y_true, y_pred):
         "MAE": mae,
         "RMSE": rmse,
     }
-
-
-def train_lgbm(X_train, y_train, X_test):
-    model = LGBMRegressor(
-        objective="regression",
-        n_estimators=300,
-        learning_rate=0.03,
-        num_leaves=15,
-        max_depth=5,
-        random_state=42,
-        verbosity=-1,
-    )
-
-    model.fit(X_train, y_train)
-
-    return model.predict(X_test)
 
 
 def main():
@@ -74,17 +60,8 @@ def main():
     # M0: persistence
     persistence_pred = test["pm25"].to_numpy()
 
-    # Shared weather + lagged PM features.
-    base_features = [
-        "temperature_2m",
-        "relative_humidity_2m",
-        "wind_speed_10m",
-        "wind_direction_10m",
-        "boundary_layer_height",
-        "pm25_lag_1h",
-        "pm25_lag_3h",
-        "pm25_lag_6h",
-    ]
+    # Shared model feature definitions.
+    base_features = BASE_FEATURES
 
     # M2 adds raw fire information.
     fire_features = [
@@ -93,12 +70,7 @@ def main():
     ]
 
     # M3 adds transport-weighted fire exposure.
-    transport_features = [
-        "transport_exposure_6h",
-        "transport_exposure_24h",
-        "transport_exposure_48h",
-        "transport_exposure_72h",
-    ]
+    transport_features = TRANSPORT_FEATURES
 
     results = []
 
@@ -111,11 +83,9 @@ def main():
     )
 
     # M1
-    pred_m1 = train_lgbm(
-        train[base_features],
-        train[target],
-        test[base_features],
-    )
+    model_m1 = create_model()
+    model_m1.fit(train[base_features], train[target])
+    pred_m1 = model_m1.predict(test[base_features])
 
     results.append(
         evaluate(
@@ -128,11 +98,9 @@ def main():
     # M2
     m2_features = base_features + fire_features
 
-    pred_m2 = train_lgbm(
-        train[m2_features],
-        train[target],
-        test[m2_features],
-    )
+    model_m2 = create_model()
+    model_m2.fit(train[m2_features], train[target])
+    pred_m2 = model_m2.predict(test[m2_features])
 
     results.append(
         evaluate(
@@ -145,11 +113,9 @@ def main():
     # M3
     m3_features = base_features + transport_features
 
-    pred_m3 = train_lgbm(
-        train[m3_features],
-        train[target],
-        test[m3_features],
-    )
+    model_m3 = create_model()
+    model_m3.fit(train[m3_features], train[target])
+    pred_m3 = model_m3.predict(test[m3_features])
 
     results.append(
         evaluate(
