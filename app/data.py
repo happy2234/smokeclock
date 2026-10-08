@@ -1,6 +1,7 @@
 import pandas as pd
 
 from app.config import FEATURES_24H_PATH
+from src.models.forecast import predict, train_forecast
 
 
 def load_data() -> pd.DataFrame:
@@ -21,19 +22,23 @@ def split_chronological(
     return train, test
 
 
+def train_replay_model(df: pd.DataFrame):
+    """Train the replay model once on the historical training period."""
+    train, _ = split_chronological(df)
+    return train_forecast(train)
+
+
 def replay_prediction(
     df: pd.DataFrame,
     test_index: int,
+    model,
 ):
-    """Train M3 only on earlier observations and predict one held-out row."""
-    from src.models.forecast import predict, train_forecast
-
-    train, test = split_chronological(df)
+    """Predict one held-out row using an already-trained replay model."""
+    _, test = split_chronological(df)
 
     if test_index < 0 or test_index >= len(test):
         raise IndexError("test_index is outside the replay test period")
 
-    model = train_forecast(train)
     row = test.iloc[[test_index]]
 
     prediction = float(predict(model, row)[0])
@@ -46,15 +51,12 @@ def replay_prediction(
     }
 
 
-
-
-
-def replay_all(df: pd.DataFrame) -> pd.DataFrame:
-    """Generate historical replay predictions for the complete held-out period."""
-    from src.models.forecast import predict, train_forecast
-
-    train, test = split_chronological(df)
-    model = train_forecast(train)
+def replay_all(
+    df: pd.DataFrame,
+    model,
+) -> pd.DataFrame:
+    """Generate historical replay predictions using an existing model."""
+    _, test = split_chronological(df)
 
     results = test[["datetime", "target_pm25"]].copy()
     results["predicted_pm25"] = predict(model, test)

@@ -2,7 +2,13 @@ import gradio as gr
 
 from app.config import APP_TITLE, FORECAST_HORIZON_HOURS
 from app.evidence import get_conformal_evaluation
-from app.data import load_data, split_chronological, replay_prediction, replay_all
+from app.data import (
+    load_data,
+    split_chronological,
+    train_replay_model,
+    replay_prediction,
+    replay_all,
+)
 from app.components.snapshot import format_snapshot
 from app.components.backtest import build_backtest_section, build_replay_table
 
@@ -13,6 +19,9 @@ def build_dashboard() -> gr.Blocks:
     row = df.iloc[-1]
     _, test = split_chronological(df)
 
+    # Train the historical replay model once and reuse it.
+    replay_model = train_replay_model(df)
+
     timestamps = [
         ts.strftime("%Y-%m-%d %H:%M IST")
         for ts in test["datetime"]
@@ -20,7 +29,7 @@ def build_dashboard() -> gr.Blocks:
 
     def run_replay(timestamp_text):
         index = timestamps.index(timestamp_text)
-        result = replay_prediction(df, index)
+        result = replay_prediction(df, index, replay_model)
 
         error = abs(result["prediction"] - result["observed"])
 
@@ -72,7 +81,7 @@ future PM2.5 using fire detections, weather, and historical air quality.
         build_backtest_section()
 
         gr.Markdown("## Full held-out replay")
-        replay_results = replay_all(df)
+        replay_results = replay_all(df, replay_model)
         build_replay_table(replay_results)
 
         uncertainty = get_conformal_evaluation()
