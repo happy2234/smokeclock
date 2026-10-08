@@ -1,5 +1,3 @@
-from datetime import date, timedelta
-
 import pandas as pd
 import requests
 
@@ -12,9 +10,7 @@ def fetch_weather(
     longitude: float,
     forecast_days: int = 2,
 ) -> pd.DataFrame:
-    """
-    Fetch hourly weather information from Open-Meteo.
-    """
+    """Fetch hourly weather for one location."""
 
     params = {
         "latitude": latitude,
@@ -40,16 +36,33 @@ def fetch_weather(
 
     response.raise_for_status()
 
-    payload = response.json()
+    return pd.DataFrame(response.json()["hourly"])
 
-    hourly = payload["hourly"]
 
-    return pd.DataFrame(hourly)
+def fetch_weather_points(
+    points: list[tuple[float, float]],
+    forecast_days: int = 2,
+) -> dict[tuple[float, float], pd.DataFrame]:
+    """
+    Fetch weather for multiple geographic points.
+
+    Returns:
+        {(latitude, longitude): hourly_dataframe}
+    """
+
+    result = {}
+
+    for latitude, longitude in points:
+        result[(latitude, longitude)] = fetch_weather(
+            latitude=latitude,
+            longitude=longitude,
+            forecast_days=forecast_days,
+        )
+
+    return result
 
 
 if __name__ == "__main__":
-
-    # Delhi
     df = fetch_weather(
         latitude=28.6139,
         longitude=77.2090,
@@ -57,5 +70,4 @@ if __name__ == "__main__":
     )
 
     print(f"Retrieved {len(df):,} hourly records")
-    print()
     print(df.head(10).to_string(index=False))
