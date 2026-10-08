@@ -47,3 +47,19 @@ def replay_prediction(
 
 
 
+
+
+def replay_all(df: pd.DataFrame) -> pd.DataFrame:
+    """Generate historical replay predictions for the complete held-out period."""
+    from src.models.forecast import predict, train_forecast
+
+    train, test = split_chronological(df)
+    model = train_forecast(train)
+
+    results = test[["datetime", "target_pm25"]].copy()
+    results["predicted_pm25"] = predict(model, test)
+    results["absolute_error"] = (
+        results["predicted_pm25"] - results["target_pm25"]
+    ).abs()
+
+    return results

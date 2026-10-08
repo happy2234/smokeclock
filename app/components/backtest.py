@@ -29,3 +29,30 @@ interpreted as proof of generalization.
             ),
         ]
     )
+
+
+def build_replay_table(results):
+    """Build a compact historical replay table."""
+    import gradio as gr
+
+    display = results.copy()
+    display["datetime"] = display["datetime"].dt.strftime("%Y-%m-%d %H:%M")
+    display["predicted_pm25"] = display["predicted_pm25"].round(1)
+    display["target_pm25"] = display["target_pm25"].round(1)
+    display["absolute_error"] = display["absolute_error"].round(1)
+
+    display = display.rename(
+        columns={
+            "datetime": "Forecast time",
+            "predicted_pm25": "Predicted PM2.5",
+            "target_pm25": "Observed PM2.5 +24h",
+            "absolute_error": "Absolute error",
+        }
+    )
+
+    return gr.Dataframe(
+        value=display,
+        headers=list(display.columns),
+        interactive=False,
+        label="October 2025 held-out replay",
+    )

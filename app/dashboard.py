@@ -1,9 +1,9 @@
 import gradio as gr
 
 from app.config import APP_TITLE, FORECAST_HORIZON_HOURS
-from app.data import load_data, split_chronological, replay_prediction
+from app.data import load_data, split_chronological, replay_prediction, replay_all
 from app.components.snapshot import format_snapshot
-from app.components.backtest import build_backtest_section
+from app.components.backtest import build_backtest_section, build_replay_table
 
 
 def build_dashboard() -> gr.Blocks:
@@ -69,6 +69,10 @@ future PM2.5 using fire detections, weather, and historical air quality.
         )
 
         build_backtest_section()
+
+        gr.Markdown("## Full held-out replay")
+        replay_results = replay_all(df)
+        build_replay_table(replay_results)
 
         gr.Markdown(
             f"""
