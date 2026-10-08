@@ -152,3 +152,81 @@ if __name__ == "__main__":
     print(f"Fire clusters:    {len(clusters):,}")
     print()
     print(clusters.to_string(index=False))
+def cluster_fires_by_hour(
+    fires: pd.DataFrame,
+    radius_km: float = 15.0,
+    min_samples: int = 2,
+) -> pd.DataFrame:
+    """
+    Cluster FIRMS detections independently within each hour.
+
+    Fire timestamps are converted to Asia/Kolkata before grouping.
+
+    Returns one row per spatial fire cluster per hour.
+    """
+
+    required = {
+        "datetime",
+        "latitude",
+        "longitude",
+        "frp",
+    }
+
+    missing = required - set(fires.columns)
+
+    if missing:
+        raise ValueError(
+            f"Missing required columns: {sorted(missing)}"
+        )
+
+    data = fires.dropna(
+        subset=[
+            "datetime",
+            "latitude",
+            "longitude",
+            "frp",
+        ]
+    ).copy()
+
+    if data.empty:
+        return pd.DataFrame()
+
+    timestamps = pd.to_datetime(
+        data["datetime"],
+        utc=True,
+    ).dt.tz_convert(
+        "Asia/Kolkata"
+    )
+
+    data["hour"] = timestamps.dt.floor("h")
+
+    results = []
+
+    for hour, group in data.groupby("hour"):
+        clusters = cluster_fires(
+            group,
+            radius_km=radius_km,
+            min_samples=min_samples,
+        )
+
+        if clusters.empty:
+            continue
+
+        clusters["datetime"] = hour
+
+        results.append(clusters)
+
+    if not results:
+        return pd.DataFrame()
+
+    return (
+        pd.concat(
+            results,
+            ignore_index=True,
+        )
+        .sort_values(
+            ["datetime", "total_frp"],
+            ascending=[True, False],
+        )
+        .reset_index(drop=True)
+    )
