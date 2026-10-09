@@ -256,10 +256,25 @@ body, .gradio-container {
 
 .sc-evidence-footnote {
     font-size: 0.76rem;
-    color: var(--body-text-color);
+    color: var(--body-text-color-subdued);
     margin-top: 8px;
     line-height: 1.5;
-    opacity: 0.85;
+}
+
+/* Inside the green callout the background can be light-green (light mode)
+   or dark-green (dark mode). Pin to a colour that reads well against both:
+   --sc-accent-text is #1e5c46 in light mode and #6fcfaa in dark mode.   */
+.sc-evidence-callout .sc-evidence-footnote {
+    color: var(--sc-accent-text, #1e5c46);
+    opacity: 1;
+}
+
+/* Section subtitle paragraphs beneath section headings */
+.sc-section-subtitle {
+    font-size: 0.88rem;
+    color: var(--body-text-color-subdued);
+    margin: -8px 0 14px 0;
+    line-height: 1.5;
 }
 
 /* ── Uncertainty section ──────────────────────────────────────────────── */

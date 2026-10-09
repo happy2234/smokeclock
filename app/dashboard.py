@@ -86,7 +86,7 @@ def build_dashboard() -> gr.Blocks:
 <div class="sc-section-heading" style="margin-top:24px;">
   Historical Forecast Replay
 </div>
-<p style="font-size:0.88rem; color:#555; margin:-8px 0 14px 0;">
+<p style="font-size:0.88rem; color: var(--body-text-color-subdued); margin:-8px 0 14px 0;">
   Select a timestamp from the held-out October 2025 test period to run
   a historical replay. The model was trained only on earlier data.
 </p>
@@ -123,7 +123,7 @@ def build_dashboard() -> gr.Blocks:
 <div class="sc-section-heading" style="margin-top:28px;">
   Model Evidence &nbsp;·&nbsp; Does transport add predictive skill?
 </div>
-<p style="font-size:0.88rem; color:#555; margin:-8px 0 14px 0;">
+<p style="font-size:0.88rem; color: var(--body-text-color-subdued); margin:-8px 0 14px 0;">
   Four benchmark models evaluated on the same October 2025 chronological holdout.
 </p>
 """)
@@ -134,7 +134,7 @@ def build_dashboard() -> gr.Blocks:
 <div class="sc-section-heading" style="margin-top:28px;">
   Full Held-out Replay
 </div>
-<p style="font-size:0.88rem; color:#555; margin:-8px 0 14px 0;">
+<p style="font-size:0.88rem; color: var(--body-text-color-subdued); margin:-8px 0 14px 0;">
   All 167 held-out October 2025 test rows with predicted vs observed PM2.5.
 </p>
 """)

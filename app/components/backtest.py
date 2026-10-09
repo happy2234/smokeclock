@@ -27,8 +27,8 @@ def build_backtest_section() -> None:
     (Weather + PM + transport vs Weather + lagged PM)
   </div>
   <div class="sc-evidence-footnote">
-    October 2025 chronological holdout &nbsp;·&nbsp;
-    Single historical evaluation — not evidence of generalization.
+    Single holdout, October 2025, 167 rows.
+    Evidence from one period, not proof of generalisation.
   </div>
 </div>
 """
@@ -43,7 +43,7 @@ def build_backtest_section() -> None:
     )
 
     gr.HTML("""
-<div class="sc-evidence-footnote" style="padding: 8px 0 4px 0; color: #2c2c2c;">
+<div class="sc-evidence-footnote" style="padding: 8px 0 4px 0;">
   <strong>Weather + PM + transport</strong> is the M3 model that incorporates the
   transport exposure index. All models are evaluated on the same chronological
   held-out test period. MAE and RMSE are in µg/m³.
